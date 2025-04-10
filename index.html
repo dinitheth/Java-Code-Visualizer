@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Java Code Visualizer</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            max-width: 1200px;
+            margin: 0 auto;
+            gap: 20px;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .editor-container {
+            display: flex;
+            gap: 20px;
+            height: 500px;
+        }
+        .code-editor {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        .visualizer {
+            flex: 1;
+            background-color: white;
+            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 15px;
+            overflow: auto;
+        }
+        textarea {
+            flex: 1;
+            padding: 15px;
+            font-family: 'Consolas', monospace;
+            font-size: 14px;
+            border: none;
+            border-radius: 5px;
+            resize: none;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            tab-size: 4;
+        }
+        .controls {
+            margin-top: 10px;
+            display: flex;
+            gap: 10px;
+        }
+        button {
+            padding: 8px 16px;
+            background-color: #4285f4;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        button:hover {
+            background-color: #3367d6;
+        }
+        .class-box {
+            border: 2px solid #2c3e50;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            background-color: #ecf0f1;
+        }
+        .class-name {
+            background-color: #2c3e50;
+            color: white;
+            padding: 8px 12px;
+            font-weight: bold;
+        }
+        .class-content {
+            padding: 10px;
+        }
+        .method-box {
+            border: 1px solid #7f8c8d;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            background-color: #f9f9f9;
+        }
+        .method-name {
+            background-color: #7f8c8d;
+            color: white;
+            padding: 6px 10px;
+        }
+        .method-content {
+            padding: 8px;
+        }
+        .field {
+            margin-bottom: 8px;
+            padding: 5px;
+            background-color: #e8f4f8;
+            border-radius: 3px;
+        }
+        .error {
+            color: #e74c3c;
+            padding: 10px;
+            background-color: #fadbd8;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+        .examples {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        .examples button {
+            background-color: #27ae60;
+        }
+        .examples button:hover {
+            background-color: #219653;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Java Code Visualizer</h1>
+        
+        <div class="examples">
+            <button onclick="loadExample('class')">Load Class Example</button>
+            <button onclick="loadExample('inheritance')">Load Inheritance Example</button>
+            <button onclick="loadExample('interface')">Load Interface Example</button>
+        </div>
+        
+        <div class="editor-container">
+            <div class="code-editor">
+                <textarea id="code-input" placeholder="Type your Java code here..."></textarea>
+                <div class="controls">
+                    <button onclick="visualizeCode()">Visualize</button>
+                    <button onclick="clearCode()">Clear</button>
+                </div>
+            </div>
+            <div class="visualizer" id="visualization">
+                <div class="placeholder">Your code visualization will appear here...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Sample code examples
+        const examples = {
+            class: `public class Person {
+    private String name;
+    private int age;
+    
+    public Person(String name, int age) {
+        this.name = name;
+        this.age = age;
+    }
+    
+    public String getName() {
+        return name;
+    }
+    
+    public void setName(String name) {
+        this.name = name;
+    }
+    
+    public int getAge() {
+        return age;
+    }
+    
+    public void setAge(int age) {
+        this.age = age;
+    }
+    
+    public void printInfo() {
+        System.out.println("Name: " + name + ", Age: " + age);
+    }
+}`,
+            inheritance: `public class Animal {
+    protected String name;
+    
+    public Animal(String name) {
+        this.name = name;
+    }
+    
+    public void makeSound() {
+        System.out.println("Some generic sound");
+    }
+}
+
+public class Dog extends Animal {
+    private String breed;
+    
+    public Dog(String name, String breed) {
+        super(name);
+        this.breed = breed;
+    }
+    
+    @Override
+    public void makeSound() {
+        System.out.println("Woof!");
+    }
+    
+    public void fetch() {
+        System.out.println(name + " is fetching!");
+    }
+}`,
+            interface: `public interface Shape {
+    double calculateArea();
+    double calculatePerimeter();
+}
+
+public class Circle implements Shape {
+    private double radius;
+    
+    public Circle(double radius) {
+        this.radius = radius;
+    }
+    
+    @Override
+    public double calculateArea() {
+        return Math.PI * radius * radius;
+    }
+    
+    @Override
+    public double calculatePerimeter() {
+        return 2 * Math.PI * radius;
+    }
+}
+
+public class Rectangle implements Shape {
+    private double width;
+    private double height;
+    
+    public Rectangle(double width, double height) {
+        this.width = width;
+        this.height = height;
+    }
+    
+    @Override
+    public double calculateArea() {
+        return width * height;
+    }
+    
+    @Override
+    public double calculatePerimeter() {
+        return 2 * (width + height);
+    }
+}`
+        };
+
+        // Load example code
+        function loadExample(type) {
+            document.getElementById('code-input').value = examples[type];
+            visualizeCode();
+        }
+
+        // Clear the code editor
+        function clearCode() {
+            document.getElementById('code-input').value = '';
+            document.getElementById('visualization').innerHTML = '<div class="placeholder">Your code visualization will appear here...</div>';
+        }
+
+        // Main visualization function
+        function visualizeCode() {
+            const code = document.getElementById('code-input').value;
+            const visualizer = document.getElementById('visualization');
+            
+            if (!code.trim()) {
+                visualizer.innerHTML = '<div class="placeholder">Your code visualization will appear here...</div>';
+                return;
+            }
+            
+            try {
+                // Parse and visualize the Java code
+                const parsedCode = parseJavaCode(code);
+                visualizer.innerHTML = '';
+                
+                if (parsedCode.length === 0) {
+                    visualizer.innerHTML = '<div class="error">No classes or interfaces found in the code.</div>';
+                    return;
+                }
+                
+                parsedCode.forEach(entity => {
+                    visualizer.appendChild(createEntityVisualization(entity));
+                });
+            } catch (error) {
+                visualizer.innerHTML = `<div class="error">Error parsing code: ${error.message}</div>`;
+            }
+        }
+        
+        // Parse Java code to extract classes, methods, fields, etc.
+        function parseJavaCode(code) {
+            const entities = [];
+            
+            // Split code by potential class/interface definitions
+            const classParts = code.split(/public\s+(class|interface|abstract class|enum)/);
+            
+            for (let i = 1; i < classParts.length; i += 2) {
+                const entityType = classParts[i].trim();
+                const entityContent = classParts[i + 1];
+                
+                if (entityContent) {
+                    try {
+                        // Extract class/interface name and inheritance/implementation
+                        const nameMatch = entityContent.match(/\s*(\w+)(?:\s+extends\s+(\w+))?(?:\s+implements\s+([\w,\s]+))?/);
+                        
+                        if (nameMatch) {
+                            const entityName = nameMatch[1];
+                            const extendedClass = nameMatch[2] || null;
+                            const implementedInterfaces = nameMatch[3] ? nameMatch[3].split(',').map(i => i.trim()) : [];
+                            
+                            // Extract the class body content
+                            const bodyStartIndex = entityContent.indexOf('{');
+                            const entityBody = extractBalancedContent(entityContent.substring(bodyStartIndex));
+                            
+                            // Parse fields and methods
+                            const fields = parseFields(entityBody);
+                            const methods = parseMethods(entityBody);
+                            
+                            entities.push({
+                                type: entityType,
+                                name: entityName,
+                                extends: extendedClass,
+                                implements: implementedInterfaces,
+                                fields: fields,
+                                methods: methods
+                            });
+                        }
+                    } catch (error) {
+                        console.error("Error parsing entity:", error);
+                    }
+                }
+            }
+            
+            return entities;
+        }
+        
+        // Extract content between balanced braces
+        function extractBalancedContent(content) {
+            let braceCount = 0;
+            let index = 0;
+            
+            for (let i = 0; i < content.length; i++) {
+                if (content[i] === '{') {
+                    braceCount++;
+                } else if (content[i] === '}') {
+                    braceCount--;
+                    if (braceCount === 0) {
+                        index = i;
+                        break;
+                    }
+                }
+            }
+            
+            return content.substring(0, index + 1);
+        }
+        
+        // Parse fields from class body
+        function parseFields(classBody) {
+            const fields = [];
+            const fieldRegex = /(?:private|public|protected|static|final|volatile|transient|\s)+(?!class|interface|enum|void|return)(\w+)\s+(\w+)\s*(?:=\s*[^;]+)?;/g;
+            
+            let match;
+            while ((match = fieldRegex.exec(classBody)) !== null) {
+                const type = match[1];
+                const name = match[2];
+                
+                // Check that this isn't inside a method
+                const upToMatch = classBody.substring(0, match.index);
+                const openBraces = (upToMatch.match(/{/g) || []).length;
+                const closeBraces = (upToMatch.match(/}/g) || []).length;
+                
+                // Only count if at class level (not inside a method)
+                if (openBraces - closeBraces <= 1) {
+                    fields.push({ type, name });
+                }
+            }
+            
+            return fields;
+        }
+        
+        // Parse methods from class body
+        function parseMethods(classBody) {
+            const methods = [];
+            const methodRegex = /(?:private|public|protected|static|final|synchronized|native|abstract|\s)+(\w+)\s+(\w+)\s*\(([^)]*)\)\s*(?:throws\s+[\w,\s]+)?\s*{/g;
+            
+            let match;
+            while ((match = methodRegex.exec(classBody)) !== null) {
+                const returnType = match[1];
+                const name = match[2];
+                const params = match[3].trim();
+                
+                // Get method body
+                const methodStart = match.index + match[0].length;
+                const methodBody = extractBalancedContent(classBody.substring(methodStart - 1));
+                
+                methods.push({
+                    returnType,
+                    name,
+                    params,
+                    body: methodBody
+                });
+            }
+            
+            // Look for constructors too
+            const constructorRegex = /(?:private|public|protected|\s)+(\w+)\s*\(([^)]*)\)\s*(?:throws\s+[\w,\s]+)?\s*{/g;
+            while ((match = constructorRegex.exec(classBody)) !== null) {
+                const name = match[1];
+                const params = match[2].trim();
+                
+                // Skip if this looks like a method (has return type before name)
+                const beforeMatch = classBody.substring(Math.max(0, match.index - 20), match.index).trim();
+                if (beforeMatch.match(/\w+$/)) {
+                    continue;
+                }
+                
+                // Get constructor body
+                const ctorStart = match.index + match[0].length;
+                const ctorBody = extractBalancedContent(classBody.substring(ctorStart - 1));
+                
+                methods.push({
+                    returnType: null, // Constructors don't have return types
+                    name,
+                    params,
+                    body: ctorBody,
+                    isConstructor: true
+                });
+            }
+            
+            return methods;
+        }
+        
+        // Create visual representation of a class or interface
+        function createEntityVisualization(entity) {
+            const entityBox = document.createElement('div');
+            entityBox.className = 'class-box';
+            
+            // Create header with entity name and type
+            const entityHeader = document.createElement('div');
+            entityHeader.className = 'class-name';
+            
+            let headerText = `${entity.type} ${entity.name}`;
+            if (entity.extends) {
+                headerText += ` extends ${entity.extends}`;
+            }
+            if (entity.implements && entity.implements.length > 0) {
+                headerText += ` implements ${entity.implements.join(', ')}`;
+            }
+            
+            entityHeader.textContent = headerText;
+            entityBox.appendChild(entityHeader);
+            
+            // Create content section for fields and methods
+            const entityContent = document.createElement('div');
+            entityContent.className = 'class-content';
+            
+            // Add fields
+            if (entity.fields.length > 0) {
+                const fieldsTitle = document.createElement('h3');
+                fieldsTitle.textContent = 'Fields';
+                entityContent.appendChild(fieldsTitle);
+                
+                entity.fields.forEach(field => {
+                    const fieldEl = document.createElement('div');
+                    fieldEl.className = 'field';
+                    fieldEl.textContent = `${field.type} ${field.name}`;
+                    entityContent.appendChild(fieldEl);
+                });
+            }
+            
+            // Add methods
+            if (entity.methods.length > 0) {
+                const methodsTitle = document.createElement('h3');
+                methodsTitle.textContent = 'Methods';
+                entityContent.appendChild(methodsTitle);
+                
+                entity.methods.forEach(method => {
+                    const methodBox = document.createElement('div');
+                    methodBox.className = 'method-box';
+                    
+                    const methodName = document.createElement('div');
+                    methodName.className = 'method-name';
+                    
+                    if (method.isConstructor) {
+                        methodName.textContent = `${method.name}(${method.params})`;
+                    } else {
+                        methodName.textContent = `${method.returnType} ${method.name}(${method.params})`;
+                    }
+                    
+                    methodBox.appendChild(methodName);
+                    
+                    // Simplified method body representation
+                    const methodContent = document.createElement('div');
+                    methodContent.className = 'method-content';
+                    methodContent.textContent = method.body
+                        .replace(/^\{|\}$/g, '')  // Remove outer braces
+                        .trim();                  // Trim whitespace
+                    
+                    methodBox.appendChild(methodContent);
+                    entityContent.appendChild(methodBox);
+                });
+            }
+            
+            entityBox.appendChild(entityContent);
+            return entityBox;
+        }
+
+        // Initialize with auto-update after typing stops
+        const codeInput = document.getElementById('code-input');
+        let typingTimer;
+        const doneTypingInterval = 1000;  // Wait 1 second after typing stops
+
+        codeInput.addEventListener('keyup', () => {
+            clearTimeout(typingTimer);
+            typingTimer = setTimeout(visualizeCode, doneTypingInterval);
+        });
+
+        codeInput.addEventListener('keydown', () => {
+            clearTimeout(typingTimer);
+        });
+    </script>
+</body>
+</html>
